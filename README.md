@@ -21,7 +21,9 @@ Baixe o `.msi` na página de [Releases](../../releases) e execute. O instalador:
 2. cria o atalho no Menu Iniciar;
 3. registra o app em **Configurações → Aplicativos → Aplicativos padrão** e abre essa página no fim, para você defini-lo como padrão.
 
-Requer o [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/9.0) (x64).
+Não precisa instalar mais nada: o .NET já vem incluído no instalador.
+
+O Windows não permite que um programa se defina como padrão sozinho. Na página que abre ao fim da instalação, clique em cada formato (.jpg, .png…) e escolha **Visualizador de Imagens**.
 
 Para desinstalar: **Configurações → Aplicativos → Aplicativos instalados**.
 
@@ -62,7 +64,7 @@ wix extension add --global WixToolset.UI.wixext/5.0.2
 .\Installer\build.ps1
 ```
 
-Gera `dist\VisualizadorDeImagens-<versão>-x64.msi`.
+Gera `dist\VisualizadorDeImagens-<versão>-x64.msi` (~45 MB, com o .NET incluído).
 
 ## Licença
 

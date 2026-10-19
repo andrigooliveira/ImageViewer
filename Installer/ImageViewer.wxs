@@ -20,7 +20,7 @@
            Compressed="yes">
 
     <MajorUpgrade DowngradeErrorMessage="Uma versão mais nova do [ProductName] já está instalada." />
-    <MediaTemplate EmbedCab="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <Icon Id="AppIcon" SourceFile="..\Assets\app.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
@@ -48,13 +48,17 @@
   </Package>
 
   <Fragment>
+    <!-- Self-contained build: the .NET runtime ships with the app, nothing else to install. -->
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
       <Component>
-        <File Id="AppExe" Source="..\dist\ImageViewer.exe" KeyPath="yes">
+        <File Id="AppExe" Source="$(PublishDir)\ImageViewer.exe" KeyPath="yes">
           <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="$(AppName)"
                     WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" Advertise="yes" />
         </File>
       </Component>
+      <Files Include="$(PublishDir)\**">
+        <Exclude Files="$(PublishDir)\ImageViewer.exe" />
+      </Files>
     </ComponentGroup>
   </Fragment>
 
