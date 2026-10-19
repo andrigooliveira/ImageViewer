@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSI installer (WiX v5). Build with Installer\build.ps1.
+  Installs machine-wide so the app shows up in Settings > Default apps, which only lists
+  desktop apps registered under HKLM. The extension list mirrors ImageFormats in Shell.cs.
+-->
+<?define Extensions = .jpg;.jpeg;.jpe;.jfif;.png;.bmp;.dib;.gif;.tif;.tiff;.ico;.webp;.heic;.heif;.avif;.jxr;.wdp ?>
+<?define AppName = Visualizador de Imagens ?>
+<?define ProgId = ImageViewer.Image ?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="$(AppName)"
+           Manufacturer="Andrigo Oliveira"
+           Version="$(Version)"
+           UpgradeCode="6C2B0F5E-3A1D-4C77-9E2B-8F4A1D9C5B31"
+           Scope="perMachine"
+           Language="1046"
+           Codepage="1252"
+           Compressed="yes">
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais nova do [ProductName] já está instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="AppIcon" SourceFile="..\Assets\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="$(RepoUrl)" />
+    <Property Id="ARPHELPLINK" Value="$(RepoUrl)/issues" />
+
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="$(AppName)" />
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="$(AppName)">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentGroupRef Id="FileAssociations" />
+    </Feature>
+
+    <!-- After an interactive install, open the app's page in Settings > Default apps. -->
+    <CustomAction Id="OpenDefaultApps" FileRef="AppExe" ExeCommand="--default-apps"
+                  Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+    <InstallExecuteSequence>
+      <Custom Action="OpenDefaultApps" After="InstallFinalize" Condition="NOT Installed AND NOT REMOVE AND UILevel &gt;= 5" />
+    </InstallExecuteSequence>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Component>
+        <File Id="AppExe" Source="..\dist\ImageViewer.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="$(AppName)"
+                    WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" Advertise="yes" />
+        </File>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="FileAssociations" Directory="INSTALLFOLDER">
+      <Component Id="ProgIdRegistration">
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(ProgId)" Type="string" Value="Arquivo de imagem" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(ProgId)" Name="FriendlyTypeName" Type="string" Value="Arquivo de imagem" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(ProgId)\DefaultIcon" Type="expandable" Value="%SystemRoot%\System32\imageres.dll,-72" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(ProgId)\Application" Name="ApplicationName" Type="string" Value="$(AppName)" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(ProgId)\Application" Name="ApplicationIcon" Type="string" Value="&quot;[#AppExe]&quot;,0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(ProgId)\shell\open\command" Type="string" Value="&quot;[#AppExe]&quot; &quot;%1&quot;" />
+
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\ImageViewer.exe" Name="FriendlyAppName" Type="string" Value="$(AppName)" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\ImageViewer.exe\DefaultIcon" Type="string" Value="&quot;[#AppExe]&quot;,0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\ImageViewer.exe\shell\open\command" Type="string" Value="&quot;[#AppExe]&quot; &quot;%1&quot;" />
+
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\ImageViewer.exe" Type="string" Value="[#AppExe]" />
+
+        <RegistryValue Root="HKLM" Key="Software\ImageViewer\Capabilities" Name="ApplicationName" Type="string" Value="$(AppName)" />
+        <RegistryValue Root="HKLM" Key="Software\ImageViewer\Capabilities" Name="ApplicationDescription" Type="string" Value="Visualizador de imagens leve, no estilo do Windows 11." />
+        <RegistryValue Root="HKLM" Key="Software\ImageViewer\Capabilities" Name="ApplicationIcon" Type="string" Value="&quot;[#AppExe]&quot;,0" />
+        <RegistryValue Root="HKLM" Key="Software\RegisteredApplications" Name="$(AppName)" Type="string" Value="Software\ImageViewer\Capabilities" />
+
+        <?foreach Ext in $(Extensions) ?>
+        <RegistryValue Root="HKLM" Key="Software\ImageViewer\Capabilities\FileAssociations" Name="$(Ext)" Type="string" Value="$(ProgId)" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\ImageViewer.exe\SupportedTypes" Name="$(Ext)" Type="string" Value="$(ProgId)" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\$(Ext)\OpenWithProgids" Name="$(ProgId)" Type="string" Value="$(ProgId)" />
+        <?endforeach ?>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
