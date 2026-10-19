@@ -264,12 +264,58 @@ static class Registration
                 openWith?.DeleteValue(ProgId, throwOnMissingValue: false);
             });
         Try(() => root.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\App Paths\ImageViewer.exe", throwOnMissingSubKey: false));
-        Try(() => root.DeleteSubKeyTree(@"Software\ImageViewer", throwOnMissingSubKey: false));
+        // Capabilities only: Software\ImageViewer\Settings holds the user's preferences.
+        Try(() => root.DeleteSubKeyTree(CapabilitiesPath, throwOnMissingSubKey: false));
         Try(() =>
         {
             using var registered = root.OpenSubKey(@"Software\RegisteredApplications", writable: true);
             registered?.DeleteValue(AppName, throwOnMissingValue: false);
         });
+    }
+
+    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
+    static extern int AssocQueryString(int flags, int str, string assoc, string? extra, System.Text.StringBuilder? output, ref uint length);
+
+    /// <summary>True when the user's choice for the common photo formats is this app.</summary>
+    public static bool IsDefaultForPhotos()
+    {
+        foreach (var ext in new[] { ".jpg", ".png" })
+        {
+            const int ASSOCSTR_PROGID = 20;
+            uint length = 260;
+            var progId = new System.Text.StringBuilder((int)length);
+            if (AssocQueryString(0, ASSOCSTR_PROGID, ext, null, progId, ref length) != 0 ||
+                !string.Equals(progId.ToString(), ProgId, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>Whether the machine-wide registration (made by the installer) exists.</summary>
+    public static bool IsRegisteredMachineWide
+    {
+        get
+        {
+            using var key = Registry.LocalMachine.OpenSubKey(CapabilitiesPath);
+            return key != null;
+        }
+    }
+
+    const string SettingsPath = @"Software\ImageViewer\Settings";
+
+    /// <summary>Set when the user picks "don't ask again" on the default-app prompt.</summary>
+    public static bool DefaultPromptDismissed
+    {
+        get
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(SettingsPath);
+            return key?.GetValue("DefaultPromptDismissed") is 1;
+        }
+        set
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(SettingsPath);
+            key.SetValue("DefaultPromptDismissed", value ? 1 : 0, RegistryValueKind.DWord);
+        }
     }
 
     public static void NotifyAssocChanged() =>

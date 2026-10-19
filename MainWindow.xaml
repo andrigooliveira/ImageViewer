@@ -103,6 +103,39 @@
                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                 <TextBlock x:Name="ToastText" FontSize="16" FontWeight="SemiBold" />
             </Border>
+
+            <!-- "Make default" prompt (Windows 11 InfoBar look), shown while the app isn't the default -->
+            <Border x:Name="DefaultPrompt" VerticalAlignment="Top" HorizontalAlignment="Center" MaxWidth="720"
+                    Margin="16,8,16,0" Padding="14,10,6,10" CornerRadius="6" BorderThickness="1" Visibility="Collapsed"
+                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0">
+                        <Ellipse Fill="{DynamicResource SystemFillColorAttentionBrush}" />
+                        <TextBlock Text="&#xE946;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                    </Grid>
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0">
+                        <Run Text="Abrir fotos sempre aqui?" FontWeight="SemiBold" />
+                        <Run Text="Defina o Visualizador de Imagens como app padrão para imagens." />
+                    </TextBlock>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Definir como padrão" Style="{DynamicResource AccentButtonStyle}" Padding="12,4"
+                                Click="DefaultPromptSet_Click" />
+                        <Button Content="Não perguntar de novo" Padding="12,4" Margin="8,0,0,0"
+                                Click="DefaultPromptNever_Click" />
+                    </StackPanel>
+                    <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE711;" Width="32" Height="32"
+                            Margin="4,0,0,0" Click="DefaultPromptClose_Click" ToolTip="Fechar" />
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Bottom bar -->

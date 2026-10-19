@@ -47,6 +47,7 @@ public partial class MainWindow : Window
     readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromMilliseconds(900) };
     readonly DispatcherTimer _overlayTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     bool _overlaysVisible;
+    bool _awaitingDefault;
 
     public MainWindow(string? path)
     {
@@ -60,6 +61,15 @@ public partial class MainWindow : Window
             _dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX;
             if (!string.IsNullOrWhiteSpace(path)) OpenPath(path);
             else UpdateUi();
+            UpdateDefaultPrompt();
+        };
+        // Coming back from Settings: hide the prompt once the user made the app the default.
+        Activated += (_, _) =>
+        {
+            if (!_awaitingDefault || !IsDefaultForPhotos()) return;
+            _awaitingDefault = false;
+            DefaultPrompt.Visibility = Visibility.Collapsed;
+            ShowToast("Pronto! Agora as fotos abrem aqui");
         };
     }
 
@@ -770,6 +780,38 @@ public partial class MainWindow : Window
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
         menu.IsOpen = true;
     }
+
+    // ---------------------------------------------------------------- Default app prompt
+
+    static bool IsDefaultForPhotos()
+    {
+        try { return Registration.IsDefaultForPhotos(); }
+        catch { return true; } // unknown: don't nag
+    }
+
+    void UpdateDefaultPrompt()
+    {
+        bool dismissed;
+        try { dismissed = Registration.DefaultPromptDismissed; }
+        catch { dismissed = false; }
+        DefaultPrompt.Visibility = !dismissed && !IsDefaultForPhotos() ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    void DefaultPromptSet_Click(object sender, RoutedEventArgs e)
+    {
+        _awaitingDefault = true;
+        // Installed by the MSI: already registered, just open the app's page in Settings.
+        if (Registration.IsRegisteredMachineWide) Registration.OpenDefaultAppsSettings(machine: true);
+        else SetDefault_Click(sender, e);
+    }
+
+    void DefaultPromptNever_Click(object sender, RoutedEventArgs e)
+    {
+        try { Registration.DefaultPromptDismissed = true; } catch { }
+        DefaultPrompt.Visibility = Visibility.Collapsed;
+    }
+
+    void DefaultPromptClose_Click(object sender, RoutedEventArgs e) => DefaultPrompt.Visibility = Visibility.Collapsed;
 
     void SetDefault_Click(object sender, RoutedEventArgs e)
     {

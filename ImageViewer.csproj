@@ -15,7 +15,7 @@
 
     <Product>Visualizador de Imagens</Product>
     <AssemblyTitle>Visualizador de Imagens</AssemblyTitle>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
 
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
